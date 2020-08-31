@@ -26,7 +26,7 @@ const handleComments = async ({ entry }) => {
     notification: {
       title: `${entry.author.displayName} commented your post`,
       body: entry.content || 'Audio',
-      tag: `comment-${entry.id}`,
+      tag: `post-${entry.post.id}-comment`,
     },
     data: {
       type: 'comment',
