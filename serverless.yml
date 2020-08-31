@@ -1,0 +1,17 @@
+service: kebetoo-services
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  notifications:
+    handler: services/notifications/handler.create
+    events:
+      - http:
+          path: notifications
+          method: POST
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
