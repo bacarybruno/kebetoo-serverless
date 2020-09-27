@@ -11,9 +11,18 @@ if (firebaseAdmin.apps.length === 0) {
   })
 }
 
+const fcmOptions = {
+  contentAvailable: true,
+  priority: 'high',
+}
+
 // Handle comment-related notifications
 const handleComments = async ({ entry }) => {
   console.log('Going to handle comments notifications')
+
+  if (entry.post.author === entry.author.id) {
+    return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
+  }
 
   let fcmToken
   try {
@@ -33,7 +42,9 @@ const handleComments = async ({ entry }) => {
       payload: JSON.stringify(entry),
     },
   }
-  const { successCount } = await firebaseAdmin.messaging().sendToDevice(fcmToken, fcmPayload)
+  const { successCount } = await firebaseAdmin
+    .messaging()
+    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
 
   console.log('Notification successfully sent:', fcmPayload)
 
@@ -43,6 +54,10 @@ const handleComments = async ({ entry }) => {
 // Handle reaction-related notifications for post
 const handlePostReaction = async (entry) => {
   console.log('Going to handle post reactions notifications')
+
+  if (entry.post.author === entry.author.id) {
+    return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
+  }
 
   let fcmToken
   try {
@@ -62,7 +77,9 @@ const handlePostReaction = async (entry) => {
       payload: JSON.stringify(entry),
     },
   }
-  const { successCount } = await firebaseAdmin.messaging().sendToDevice(fcmToken, fcmPayload)
+  const { successCount } = await firebaseAdmin
+    .messaging()
+    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
 
   console.log('Notification successfully sent:', fcmPayload)
 
@@ -72,6 +89,10 @@ const handlePostReaction = async (entry) => {
 // Handle reaction-related notifications for comments
 const handleCommentReaction = async (entry) => {
   console.log('Going to handle comments reactions notifications')
+
+  if (entry.comment.author === entry.author.id) {
+    return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
+  }
 
   let fcmToken
   try {
@@ -91,7 +112,9 @@ const handleCommentReaction = async (entry) => {
       payload: JSON.stringify(entry),
     },
   }
-  const { successCount } = await firebaseAdmin.messaging().sendToDevice(fcmToken, fcmPayload)
+  const { successCount } = await firebaseAdmin
+    .messaging()
+    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
 
   console.log('Notification successfully sent:', fcmPayload)
 
