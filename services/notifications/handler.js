@@ -16,9 +16,16 @@ const fcmOptions = {
   priority: 'high',
 }
 
-// Handle comment-related notifications
-const handleComments = async ({ entry }) => {
-  console.log('Going to handle comments notifications')
+const NOTIFICATION_TYPES = {
+  COMMENT: 'comment',
+  REPLY: 'reply',
+  POST_REACTION: 'post-reaction',
+  COMMENT_REACTION: 'comment-reaction',
+}
+
+// Handle post comment-related notifications
+const handlePostComment = async (entry) => {
+  console.log('Going to handle post comments notifications')
 
   if (entry.post.author === entry.author.id) {
     return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
@@ -38,10 +45,46 @@ const handleComments = async ({ entry }) => {
       tag: `post-${entry.post.id}-comment`,
     },
     data: {
-      type: 'comment',
+      type: NOTIFICATION_TYPES.COMMENT,
       payload: JSON.stringify(entry),
     },
   }
+  const { successCount } = await firebaseAdmin
+    .messaging()
+    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
+
+  console.log('Notification successfully sent:', fcmPayload)
+
+  return sendStatus(200, { success: true, count: successCount })
+}
+
+// Handle thread comment-related notifications
+const handleReplyComment = async (entry) => {
+  console.log('Going to handle comments reply notifications')
+
+  if (entry.thread.author === entry.author.id) {
+    return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
+  }
+
+  let fcmToken
+  try {
+    fcmToken = await getFcmToken(entry.thread.author)
+  } catch (error) {
+    return sendStatus(400, { errorMessage: error.message })
+  }
+
+  const fcmPayload = {
+    notification: {
+      title: `${entry.author.displayName} replied to your comment`,
+      body: entry.content || 'Audio',
+      tag: `comment-${entry.thread.id}-reply`,
+    },
+    data: {
+      type: NOTIFICATION_TYPES.REPLY,
+      payload: JSON.stringify(entry),
+    },
+  }
+
   const { successCount } = await firebaseAdmin
     .messaging()
     .sendToDevice(fcmToken, fcmPayload, fcmOptions)
@@ -73,7 +116,7 @@ const handlePostReaction = async (entry) => {
       tag: `post-${entry.post.id}-reaction`,
     },
     data: {
-      type: 'post-reaction',
+      type: NOTIFICATION_TYPES.POST_REACTION,
       payload: JSON.stringify(entry),
     },
   }
@@ -108,7 +151,7 @@ const handleCommentReaction = async (entry) => {
       tag: `comment-${entry.comment.id}-reaction`,
     },
     data: {
-      type: 'comment-reaction',
+      type: NOTIFICATION_TYPES.COMMENT_REACTION,
       payload: JSON.stringify(entry),
     },
   }
@@ -126,6 +169,14 @@ const handleReactions = async ({ entry }) => {
   const result = entry.comment
     ? await handleCommentReaction(entry)
     : await handlePostReaction(entry)
+  return result
+}
+
+// Handle reaction-related notifications
+const handleComments = async ({ entry }) => {
+  const result = entry.post
+    ? await handlePostComment(entry)
+    : await handleReplyComment(entry)
   return result
 }
 
