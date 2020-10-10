@@ -11,6 +11,10 @@ functions:
       - http:
           path: notifications
           method: POST
+  ranking:
+    handler: services/ranking/handler.rank
+    events:
+      - schedule: rate(5 minutes)
 
 plugins:
   - serverless-offline

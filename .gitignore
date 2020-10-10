@@ -7,3 +7,4 @@ jspm_packages
 
 # Credentials
 credentials/firebase-service-account.json
+.env.prod
