@@ -15,7 +15,21 @@ functions:
     handler: services/ranking/handler.rank
     events:
       - schedule: rate(5 minutes)
+  thumbnail:
+    handler: services/thumbnail/handler.generate
+    events:
+      - s3:
+          bucket: ${env:S3_BUCKET, 'local-bucket'}
+          event: s3:ObjectCreated:*
+          rules:
+            - prefix: ${env:S3_BUCKET_VIDEOS_KEY, 'videos'}/
 
 plugins:
+  - serverless-s3-local
   - serverless-offline
   - serverless-dotenv-plugin
+
+custom:
+  serverless-offline:
+    host: localhost
+    directory: ${file(./serverless.yml.js):path}/tmp/buckets

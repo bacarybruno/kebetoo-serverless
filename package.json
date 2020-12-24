@@ -17,12 +17,14 @@
     "eslint-plugin-import": "^2.21.2",
     "husky": "^4.2.5",
     "serverless-dotenv-plugin": "^3.0.0",
-    "serverless-offline": "^6.7.0"
+    "serverless-offline": "^6.7.0",
+    "serverless-s3-local": "^0.6.7"
   },
   "dependencies": {
     "axios": "^0.20.0",
     "decay": "^1.0.12",
     "firebase-admin": "^9.1.1",
-    "mongodb": "^3.6.2"
+    "mongodb": "^3.6.2",
+    "video-thumbnail-generator": "^1.1.3"
   }
 }
