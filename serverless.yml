@@ -21,8 +21,6 @@ functions:
       - s3:
           bucket: ${env:S3_BUCKET, 'local-bucket'}
           event: s3:ObjectCreated:*
-          rules:
-            - prefix: ${env:S3_BUCKET_VIDEOS_KEY, 'videos'}/
 
 plugins:
   - serverless-s3-local

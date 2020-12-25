@@ -16,9 +16,7 @@ if (process.env.IS_OFFLINE === 'true') {
 }
 
 const allowedTypes = ['mov', 'mpg', 'mpeg', 'mp4', 'wmv', 'avi', 'webm']
-const filePreviewSuffix = process.env.FILE_PREVIEW_SUFFIX || 'preview'
 const tmpDir = process.env.TMP_DIR || '/tmp'
-const s3BucketVideosKey = process.env.S3_BUCKET_VIDEOS_KEY || 'videos'
 const s3BucketThumbnailsKey = process.env.S3_BUCKET_THUMBNAILS_KEY || 'thumbnails'
 const assetSize = 480
 const imageConfig = {
@@ -26,8 +24,8 @@ const imageConfig = {
 }
 const gifConfig = {
   fps: 5,
-  duration: 6,
-  speedMultiplier: 1.5,
+  duration: 4,
+  speedMultiplier: 1,
   deletePalette: true,
   scale: assetSize,
 }
@@ -53,15 +51,14 @@ const createThumbnail = async (sourcePath, type = 'gif') => {
   })
 }
 
-const uploadToS3 = (filepath, srcKey, bucket, type = 'gif', name = filePreviewSuffix) => {
-  const tmpFile = createReadStream(filepath)
-  const dstKey = srcKey
-    .replace(/\.\w+$/, `-${name}.${type}`)
-    .replace(`${s3BucketVideosKey}/`, `${s3BucketThumbnailsKey}/`)
+const uploadToS3 = (filepath, srcKey, bucket, type = 'gif') => {
+  const dstKey = srcKey.replace(/\.\w+$/, `.${type}`).split('/')
+  dstKey.splice(dstKey.length - 2, 0, `/${s3BucketThumbnailsKey}`)
+
   const params = {
     Bucket: bucket,
-    Key: dstKey,
-    Body: tmpFile,
+    Key: dstKey.join('/').slice(1),
+    Body: createReadStream(filepath),
     ContentType: `image/${type}`,
   }
 
