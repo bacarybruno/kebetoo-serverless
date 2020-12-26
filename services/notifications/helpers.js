@@ -1,4 +1,5 @@
-const axios = require('axios').default
+const { default: axios } = require('axios')
+const firebaseAdmin = require('firebase-admin')
 
 const api = axios.create({
   baseURL: process.env.API_BASE_URL,
@@ -44,7 +45,16 @@ const validateBody = ({ event, model }) => {
 }
 
 const getFcmToken = async (author) => {
-  const { data } = await api.get(`/authors/${author}`)
+  const authToken = await firebaseAdmin.auth().createCustomToken('kebetoo-notifications')
+  const { data: { idToken } } = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseApiKey}`, {
+    token: authToken,
+    returnSecureToken: true,
+  })
+  const { data } = await api.get(`/authors/${author}`, {
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+    },
+  })
   const { notificationToken } = data
   if (!notificationToken) {
     throw new Error('A fcm token is required to send notifications')

@@ -1,6 +1,7 @@
 const decay = require('decay')
 const { MongoClient, ObjectId } = require('mongodb')
-const axios = require('axios').default
+const { default: axios } = require('axios')
+const firebaseAdmin = require('firebase-admin')
 
 const api = axios.create({
   baseURL: process.env.API_BASE_URL,
@@ -8,6 +9,7 @@ const api = axios.create({
 
 const dbUrl = process.env.DB_CONN_STR
 const dbName = process.env.DB_NAME
+const firebaseApiKey = process.env.FIREBASE_API_KEY
 let dbInstance = null
 
 const hotScore = decay.redditHot()
@@ -17,7 +19,18 @@ const countReaction = (post, type) => post
   .filter((reaction) => reaction.type === type)
   .length
 
-const getAllPosts = async () => api.get('/posts?_sort=createdAt:desc&_limit=-1')
+const getAllPosts = async () => {
+  const authToken = await firebaseAdmin.auth().createCustomToken('kebetoo-ranking')
+  const { data: { idToken } } = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseApiKey}`, {
+    token: authToken,
+    returnSecureToken: true,
+  })
+  return api.get('/posts?_sort=updatedAt:desc&_limit=-1', {
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+    },
+  })
+}
 
 const connectToDatabase = async () => {
   if (dbInstance) return Promise.resolve(dbInstance)
