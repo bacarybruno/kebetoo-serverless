@@ -1,5 +1,4 @@
 service: kebetoo-services
-useDotenv: true
 
 provider:
   name: aws
