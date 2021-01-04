@@ -2,11 +2,14 @@
 node_modules
 jspm_packages
 
-# Serverless directories
+# serverless directories
 .serverless
 
-# Credentials
+# credentials
 credentials/firebase-service-account.json
-.env.prod
+.env.production
+.env.development
 
+# other
 tmp
+layer

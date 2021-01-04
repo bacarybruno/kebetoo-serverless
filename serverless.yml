@@ -3,6 +3,13 @@ service: kebetoo-services
 provider:
   name: aws
   runtime: nodejs12.x
+  region: ${env:REGION, 'eu-west-3'}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+      Resource: "arn:aws:s3:::${self:custom.bucket}/*"
 
 functions:
   notifications:
@@ -14,13 +21,20 @@ functions:
   ranking:
     handler: services/ranking/handler.rank
     events:
-      - schedule: rate(5 minutes)
+      - schedule: rate(${self:custom.ranking_rate})
   thumbnail:
     handler: services/thumbnail/handler.generate
     events:
       - s3:
-          bucket: ${env:S3_BUCKET, 'local-bucket'}
+          bucket: ${self:custom.bucket}
           event: s3:ObjectCreated:*
+          existing: true
+    layers:
+      - {Ref: FfmpegLambdaLayer}
+
+layers:
+  ffmpeg:
+    path: layer
 
 plugins:
   - serverless-s3-local
@@ -31,3 +45,17 @@ custom:
   serverless-offline:
     host: localhost
     directory: ${file(./serverless.yml.js):path}/tmp/buckets
+  dotenv:
+    required:
+      file: true
+  bucket: ${env:S3_BUCKET, 'kebetoo'}
+  ranking_rate: ${env:RANKING_RATE, '5 minutes'}
+
+package:
+  exclude:
+    - tmp/**
+    - README.md
+    - husky.config.js
+    - commitlint.config.js
+    - .gitattributes
+    - .eslintrc.js
