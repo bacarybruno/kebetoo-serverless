@@ -4,6 +4,7 @@
   "version": "0.0.5",
   "scripts": {
     "develop": "sls offline start --printOutput",
+    "publish": "sls deploy --env production",
     "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
