@@ -63,3 +63,4 @@ package:
     - commitlint.config.js
     - .gitattributes
     - .eslintrc.js
+    - .env.*
