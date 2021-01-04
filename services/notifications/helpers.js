@@ -5,6 +5,8 @@ const api = axios.create({
   baseURL: process.env.API_BASE_URL,
 })
 
+const firebaseApiKey = process.env.FIREBASE_API_KEY
+
 const PostTypes = {
   AUDIO: 'Audio',
   IMAGE: 'Image',

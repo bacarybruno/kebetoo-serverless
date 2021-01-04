@@ -4,11 +4,12 @@
   "version": "0.0.6",
   "scripts": {
     "develop": "sls offline start --printOutput",
-    "publish": "sls deploy --env production",
+    "deploy": "sls deploy --env production",
+    "sls": "serverless",
     "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Kebetoo",
   "license": "ISC",
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
@@ -17,6 +18,7 @@
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.21.2",
     "husky": "^4.2.5",
+    "serverless": "^2.17.0",
     "serverless-dotenv-plugin": "^3.0.0",
     "serverless-offline": "^6.7.0",
     "serverless-s3-local": "^0.6.7"

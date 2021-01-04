@@ -1,8 +1,12 @@
 service: kebetoo-services
+useDotenv: true
 
 provider:
   name: aws
   runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  apiGateway:
+    shouldStartNameWithService: true
   region: ${env:REGION, 'eu-west-3'}
   iamRoleStatements:
     - Effect: Allow

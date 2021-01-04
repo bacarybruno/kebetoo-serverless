@@ -9,8 +9,9 @@ const api = axios.create({
 
 const dbUrl = process.env.DB_CONN_STR
 const dbName = process.env.DB_NAME
-const firebaseApiKey = process.env.FIREBASE_API_KEY
 let dbInstance = null
+
+const firebaseApiKey = process.env.FIREBASE_API_KEY
 
 const hotScore = decay.redditHot()
 
