@@ -3,6 +3,7 @@ service: kebetoo-services
 provider:
   name: aws
   runtime: nodejs12.x
+  timeout: 30
   lambdaHashingVersion: 20201221
   apiGateway:
     shouldStartNameWithService: true
