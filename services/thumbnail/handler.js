@@ -17,6 +17,7 @@ if (process.env.IS_OFFLINE === 'true') {
 
 const allowedTypes = ['mov', 'mpg', 'mpeg', 'mp4', 'wmv', 'avi', 'webm']
 const tmpDir = process.env.TMP_DIR || '/tmp'
+const videoPrefix = process.env.VIDEO_PREFIX || 'VID'
 const s3BucketThumbnailsKey = process.env.S3_BUCKET_THUMBNAILS_KEY || 'thumbnails'
 const assetSize = 480
 const imageConfig = {
@@ -81,7 +82,11 @@ module.exports.generate = async (event, context) => {
   let fileType = srcKey.match(/\.\w+$/)
 
   if (!fileType) {
-    return sendStatus(400, `Invalid file type found for key: ${srcKey}`)
+    return sendStatus(400, `Invalid file type found for key: ${srcKey}.`)
+  }
+
+  if (!srcKey.startsWith(videoPrefix) && !srcKey.substring(1).startsWith(videoPrefix)) {
+    return sendStatus(400, `Invalid file type found for key: ${srcKey}. Key should start with ${videoPrefix}`)
   }
 
   fileType = fileType[0].slice(1)
