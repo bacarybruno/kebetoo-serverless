@@ -1,7 +1,4 @@
-const sendStatus = (statusCode, body) => ({
-  statusCode,
-  body: JSON.stringify(body),
-})
+const sendStatus = (statusCode, body) => console.log(statusCode, body)
 
 module.exports = {
   sendStatus,
