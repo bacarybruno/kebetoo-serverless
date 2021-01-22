@@ -1,6 +1,6 @@
 const firebaseAdmin = require('firebase-admin')
 const {
-  getFcmToken, getPostType, validateBody, sendStatus, AllowedModels,
+  getFcmToken, validateBody, sendStatus, AllowedModels,
 } = require('./helpers')
 
 // Check the number of initialized firebase apps
@@ -39,11 +39,6 @@ const handlePostComment = async (entry) => {
   }
 
   const fcmPayload = {
-    notification: {
-      title: `${entry.author.displayName} commented your post`,
-      body: entry.content || 'Audio',
-      tag: `post-${entry.post.id}-comment`,
-    },
     data: {
       type: NOTIFICATION_TYPES.COMMENT,
       payload: JSON.stringify(entry),
@@ -74,11 +69,6 @@ const handleReplyComment = async (entry) => {
   }
 
   const fcmPayload = {
-    notification: {
-      title: `${entry.author.displayName} replied to your comment`,
-      body: entry.content || 'Audio',
-      tag: `comment-${entry.thread.id}-reply`,
-    },
     data: {
       type: NOTIFICATION_TYPES.REPLY,
       payload: JSON.stringify(entry),
@@ -110,11 +100,6 @@ const handlePostReaction = async (entry) => {
   }
 
   const fcmPayload = {
-    notification: {
-      title: `${entry.author.displayName} reacted to your post`,
-      body: entry.post.content || getPostType(entry.post),
-      tag: `post-${entry.post.id}-reaction`,
-    },
     data: {
       type: NOTIFICATION_TYPES.POST_REACTION,
       payload: JSON.stringify(entry),
@@ -145,11 +130,6 @@ const handleCommentReaction = async (entry) => {
   }
 
   const fcmPayload = {
-    notification: {
-      title: `${entry.author.displayName} reacted to your comment`,
-      body: entry.comment.content || 'Audio',
-      tag: `comment-${entry.comment.id}-reaction`,
-    },
     data: {
       type: NOTIFICATION_TYPES.COMMENT_REACTION,
       payload: JSON.stringify(entry),

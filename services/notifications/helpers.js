@@ -64,7 +64,10 @@ const getFcmToken = async (author) => {
   return notificationToken
 }
 
-const sendStatus = (statusCode, body) => ({ statusCode, body: JSON.stringify(body) })
+const sendStatus = (statusCode, body) => {
+  console.log(statusCode, body)
+  return ({ statusCode, body: JSON.stringify(body) })
+}
 
 module.exports = {
   getPostType,

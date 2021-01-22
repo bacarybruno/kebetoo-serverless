@@ -3,8 +3,9 @@ service: kebetoo-services
 provider:
   name: aws
   runtime: nodejs12.x
-  timeout: 30
+  timeout: ${self:custom.lambdaTimeout}
   lambdaHashingVersion: 20201221
+  logRetentionInDays: ${self:custom.logRetentionInDays}
   apiGateway:
     shouldStartNameWithService: true
   region: ${env:REGION, 'eu-west-3'}
@@ -54,6 +55,8 @@ custom:
       file: true
   bucket: ${env:S3_BUCKET, 'kebetoo'}
   ranking_rate: ${env:RANKING_RATE, '5 minutes'}
+  lambdaTimeout: 30
+  logRetentionInDays: 30
 
 package:
   exclude:
