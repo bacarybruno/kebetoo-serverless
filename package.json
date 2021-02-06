@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "axios": "^0.20.0",
+    "dayjs": "^1.10.4",
     "decay": "^1.0.12",
     "firebase-admin": "^9.1.1",
     "mongodb": "^3.6.2",

@@ -20,13 +20,17 @@ const countReaction = (post, type) => post
   .filter((reaction) => reaction.type === type)
   .length
 
-const getAllPosts = async () => {
+const getAllPosts = async (filter) => {
   const authToken = await firebaseAdmin.auth().createCustomToken('kebetoo-ranking')
   const { data: { idToken } } = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseApiKey}`, {
     token: authToken,
     returnSecureToken: true,
   })
-  return api.get('/posts?_sort=updatedAt:desc&_limit=-1', {
+  let url = '/posts?_sort=lastActive:desc&_limit=-1'
+  if (filter && filter.lastActive) {
+    url = `/posts?lastActive_gte=${filter.lastActive}&_limit=-1`
+  }
+  return api.get(url, {
     headers: {
       Authorization: `Bearer ${idToken}`,
     },
