@@ -1,7 +1,7 @@
 {
   "name": "kebetoo-services",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "scripts": {
     "develop": "sls offline start --printOutput --allowCache",
     "deploy": "sls deploy --env production",
