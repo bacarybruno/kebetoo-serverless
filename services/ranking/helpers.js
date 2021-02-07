@@ -20,13 +20,17 @@ const countReaction = (post, type) => post
   .filter((reaction) => reaction.type === type)
   .length
 
-const getAllPosts = async () => {
+const getAllPosts = async (filter) => {
   const authToken = await firebaseAdmin.auth().createCustomToken('kebetoo-ranking')
   const { data: { idToken } } = await axios.post(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseApiKey}`, {
     token: authToken,
     returnSecureToken: true,
   })
-  return api.get('/posts?_sort=updatedAt:desc&_limit=-1', {
+  let url = '/posts?_sort=lastActive:desc&_limit=-1'
+  if (filter && filter.lastActive) {
+    url = `/posts?lastActive_gte=${filter.lastActive}&_limit=-1`
+  }
+  return api.get(url, {
     headers: {
       Authorization: `Bearer ${idToken}`,
     },
@@ -43,25 +47,28 @@ const connectToDatabase = async () => {
 const sendStatus = (statusCode, body) => ({ statusCode, body: JSON.stringify(body) })
 
 const setPostsScores = async (posts) => {
-  const db = await connectToDatabase()
-  const operations = posts.map((post) => {
-    const score = hotScore(
-      countReaction(post, 'like') + post.comments.length,
-      countReaction(post, 'dislike'),
-      new Date(post.updatedAt),
-    )
-    return {
-      updateOne: {
-        filter: {
-          _id: ObjectId(post.id),
+  if (posts && posts.length > 0) {
+    const db = await connectToDatabase()
+    const operations = posts.map((post) => {
+      const score = hotScore(
+        countReaction(post, 'like') + post.comments.length,
+        countReaction(post, 'dislike'),
+        new Date(post.updatedAt),
+      )
+      return {
+        updateOne: {
+          filter: {
+            _id: ObjectId(post.id),
+          },
+          update: {
+            $set: { score },
+          },
         },
-        update: {
-          $set: { score },
-        },
-      },
-    }
-  })
-  return db.collection('posts').bulkWrite(operations, { ordered: false })
+      }
+    })
+    return db.collection('posts').bulkWrite(operations, { ordered: false })
+  }
+  return Promise.resolve(false)
 }
 
 module.exports = {
