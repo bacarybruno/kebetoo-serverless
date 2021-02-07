@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.3.0",
   "scripts": {
-    "develop": "sls offline start --printOutput",
+    "develop": "sls offline start --printOutput --allowCache",
     "deploy": "sls deploy --env production",
     "sls": "serverless",
     "lint": "eslint",
@@ -28,6 +28,7 @@
     "dayjs": "^1.10.4",
     "decay": "^1.0.12",
     "firebase-admin": "^9.1.1",
+    "fluent-ffmpeg": "^2.1.2",
     "mongodb": "^3.6.2",
     "video-thumbnail-generator": "^1.1.3"
   }
