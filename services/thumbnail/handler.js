@@ -95,7 +95,7 @@ const uploadToS3 = ({
   let dstKey = srcKey
   if (replace) {
     dstKey = srcKey
-      .replace(getExtension(srcKey), ext)
+      .replace(getExtension(srcKey, true), `.${ext}`)
       .split('/')
     dstKey
       .splice(dstKey.length - 2, 0, `/${s3BucketThumbnailsKey}`)
