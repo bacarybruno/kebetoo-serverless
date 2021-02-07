@@ -47,25 +47,28 @@ const connectToDatabase = async () => {
 const sendStatus = (statusCode, body) => ({ statusCode, body: JSON.stringify(body) })
 
 const setPostsScores = async (posts) => {
-  const db = await connectToDatabase()
-  const operations = posts.map((post) => {
-    const score = hotScore(
-      countReaction(post, 'like') + post.comments.length,
-      countReaction(post, 'dislike'),
-      new Date(post.updatedAt),
-    )
-    return {
-      updateOne: {
-        filter: {
-          _id: ObjectId(post.id),
+  if (posts && posts.length > 0) {
+    const db = await connectToDatabase()
+    const operations = posts.map((post) => {
+      const score = hotScore(
+        countReaction(post, 'like') + post.comments.length,
+        countReaction(post, 'dislike'),
+        new Date(post.updatedAt),
+      )
+      return {
+        updateOne: {
+          filter: {
+            _id: ObjectId(post.id),
+          },
+          update: {
+            $set: { score },
+          },
         },
-        update: {
-          $set: { score },
-        },
-      },
-    }
-  })
-  return db.collection('posts').bulkWrite(operations, { ordered: false })
+      }
+    })
+    return db.collection('posts').bulkWrite(operations, { ordered: false })
+  }
+  return Promise.resolve(false)
 }
 
 module.exports = {
