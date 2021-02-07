@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk')
+const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
 const { createReadStream } = require('fs')
 const { default: ThumbnailGenerator } = require('video-thumbnail-generator')
@@ -31,6 +32,41 @@ const gifConfig = {
   scale: assetSize,
 }
 
+const processedFiles = []
+const minCompressionDiff = 500 * 1024 // 500 KB
+
+const getExtension = (src, keepDot) => {
+  const ext = path.extname(src.split('?')[0])
+  if (keepDot) {
+    return ext
+  }
+  return ext.substr(1)
+}
+
+const getFileInfos = (source) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(source, (err, data) => {
+      if (err) reject(err)
+      else resolve(data)
+    })
+  })
+}
+
+const compressVideo = async (source) => {
+  const extension = getExtension(source)
+  const output = `${tmpDir}/compressed-${Date.now()}.${extension}`;
+  return new Promise((resolve, reject) => {
+    ffmpeg()
+      .input(source)
+      .videoCodec('libx265')
+      .outputOptions(['-crf 28'])
+      .output(output)
+      .on('end', () => resolve(output))
+      .on('error', reject)
+      .run()
+  })
+}
+
 const createThumbnail = async (sourcePath, type = 'gif') => {
   const generator = new ThumbnailGenerator({
     sourcePath,
@@ -52,15 +88,27 @@ const createThumbnail = async (sourcePath, type = 'gif') => {
   })
 }
 
-const uploadToS3 = (filepath, srcKey, bucket, type = 'gif') => {
-  const dstKey = srcKey.replace(/\.\w+$/, `.${type}`).split('/')
-  dstKey.splice(dstKey.length - 2, 0, `/${s3BucketThumbnailsKey}`)
+const uploadToS3 = ({
+  filepath, srcKey, bucket, replace = true, isVideo = false,
+}) => {
+  const ext = getExtension(filepath)
+  let dstKey = srcKey
+  if (replace) {
+    dstKey = srcKey
+      .replace(getExtension(srcKey), ext)
+      .split('/')
+    dstKey
+      .splice(dstKey.length - 2, 0, `/${s3BucketThumbnailsKey}`)
+    dstKey = dstKey
+      .join('/')
+      .substr(1)
+  }
 
   const params = {
     Bucket: bucket,
-    Key: dstKey.join('/').slice(1),
+    Key: dstKey,
     Body: createReadStream(filepath),
-    ContentType: `image/${type}`,
+    ContentType: `${isVideo ? 'video' : 'image'}/${ext}`,
   }
 
   return new Promise((resolve, reject) => {
@@ -69,7 +117,7 @@ const uploadToS3 = (filepath, srcKey, bucket, type = 'gif') => {
         console.log(err)
         reject(err)
       }
-      console.log(`successful upload to ${bucket}/${dstKey}`)
+      console.log(`Successful upload to ${bucket}/${dstKey}`)
       resolve(data)
     })
   })
@@ -77,6 +125,11 @@ const uploadToS3 = (filepath, srcKey, bucket, type = 'gif') => {
 
 module.exports.generate = async (event, context) => {
   const srcKey = decodeURIComponent(event.Records[0].s3.object.key).replace(/\+/g, ' ')
+  if (processedFiles.includes(srcKey)) {
+    return sendStatus(400, `The file ${srcKey} is already processed`)
+  }
+  processedFiles.push(srcKey)
+
   const bucket = event.Records[0].s3.bucket.name
   const target = s3.getSignedUrl('getObject', { Bucket: bucket, Key: srcKey, Expires: 1000 })
   let fileType = srcKey.match(/\.\w+$/)
@@ -89,16 +142,44 @@ module.exports.generate = async (event, context) => {
     return sendStatus(400, `Invalid file type found for key: ${srcKey}. Key should start with ${videoPrefix}`)
   }
 
-  fileType = fileType[0].slice(1)
+  fileType = fileType[0].substr(1)
 
   if (!allowedTypes.includes(fileType)) {
     return sendStatus(400, `Invalid filetype. Expected one of ${allowedTypes.join(', ')} but got ${fileType} instead.`)
   }
 
-  const gifPath = await createThumbnail(target)
-  await uploadToS3(gifPath, srcKey, bucket)
-  const imagePath = await createThumbnail(target, 'png')
-  await uploadToS3(imagePath, srcKey, bucket, 'png')
+  const compressedVideo = await compressVideo(target)
+  const compressedVideoInfos = await getFileInfos(compressedVideo)
+  const originalVideoInfos = await getFileInfos(target)
+
+  const reducedVideoSizeDiff = originalVideoInfos.format.size - compressedVideoInfos.format.size
+  if (reducedVideoSizeDiff >= minCompressionDiff) {
+    console.log(`Video size reduced by ${reducedVideoSizeDiff / 1024} KB`)
+    // video size is reduced by more than 500 KB => upload to s3
+    await uploadToS3({
+      filepath: compressedVideo,
+      srcKey,
+      bucket,
+      replace: false,
+      isVideo: true,
+    })
+  } else {
+    console.log(`Skipping video upload. The size is only reduced by ${reducedVideoSizeDiff / 1024} KB`)
+  }
+
+  const gifPath = await createThumbnail(compressedVideo, 'gif')
+  await uploadToS3({
+    filepath: gifPath,
+    srcKey,
+    bucket,
+  })
+
+  const imagePath = await createThumbnail(compressedVideo, 'png')
+  await uploadToS3({
+    filepath: imagePath,
+    srcKey,
+    bucket,
+  })
 
   return sendStatus(200, `Processed ${bucket}/${srcKey} successfully`)
 }
