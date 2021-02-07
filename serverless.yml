@@ -55,7 +55,7 @@ custom:
       file: true
   bucket: ${env:S3_BUCKET, 'kebetoo'}
   ranking_rate: ${env:RANKING_RATE, '5 minutes'}
-  lambdaTimeout: 30
+  lambdaTimeout: 60
   logRetentionInDays: 30
 
 package:
