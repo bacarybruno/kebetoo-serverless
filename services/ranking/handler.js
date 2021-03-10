@@ -12,7 +12,8 @@ if (firebaseAdmin.apps.length === 0) {
 }
 
 // Handler
-module.exports.rank = async () => {
+module.exports.rank = async (event) => {
+  console.log('Received event', event)
   const interval = process.env.RANKING_RATE
   const [value, unit] = interval.split(' ')
   const lastActive = dayjs()

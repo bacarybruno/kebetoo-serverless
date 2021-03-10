@@ -1,6 +1,12 @@
 const firebaseAdmin = require('firebase-admin')
 const {
-  getFcmToken, validateBody, sendStatus, AllowedModels,
+  getFcmToken,
+  getPostType,
+  validateBody,
+  sendStatus,
+  AllowedModels,
+  persistNotification,
+  getBadgeCount,
 } = require('./helpers')
 
 // Check the number of initialized firebase apps
@@ -31,26 +37,37 @@ const handlePostComment = async (entry) => {
     return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
   }
 
-  let fcmToken
   try {
-    fcmToken = await getFcmToken(entry.post.author)
+    const { fcmToken, uid } = await getFcmToken(entry.post.author)
+
+    const badgeCount = await getBadgeCount(uid)
+    const notification = {
+      title: `${entry.author.displayName} commented your post`,
+      body: entry.content || 'Audio',
+      tag: `post-${entry.post.id}-comment`,
+      badge: badgeCount,
+    }
+
+    const data = {
+      type: NOTIFICATION_TYPES.COMMENT,
+      payload: JSON.stringify({
+        postId: entry.post.id,
+        author: entry.author, 
+        content: entry.content,
+      }),
+    }
+    await persistNotification(uid, data)
+
+    const fcmPayload = { notification }
+    const { successCount } = await firebaseAdmin
+      .messaging()
+      .sendToDevice(fcmToken, fcmPayload, fcmOptions)
+
+    console.log('Notification successfully sent:', fcmPayload)
+    return sendStatus(200, { success: true, count: successCount })
   } catch (error) {
     return sendStatus(400, { errorMessage: error.message })
   }
-
-  const fcmPayload = {
-    data: {
-      type: NOTIFICATION_TYPES.COMMENT,
-      payload: JSON.stringify(entry),
-    },
-  }
-  const { successCount } = await firebaseAdmin
-    .messaging()
-    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
-
-  console.log('Notification successfully sent:', fcmPayload)
-
-  return sendStatus(200, { success: true, count: successCount })
 }
 
 // Handle thread comment-related notifications
@@ -61,27 +78,37 @@ const handleReplyComment = async (entry) => {
     return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
   }
 
-  let fcmToken
   try {
-    fcmToken = await getFcmToken(entry.thread.author)
+    const { fcmToken, uid } = await getFcmToken(entry.thread.author)
+
+    const badgeCount = await getBadgeCount(uid)
+    const notification = {
+      title: `${entry.author.displayName} replied to your comment`,
+      body: entry.content || 'Audio',
+      tag: `comment-${entry.thread.id}-reply`,
+      badge: badgeCount,
+    }
+
+    const data = {
+      type: NOTIFICATION_TYPES.REPLY,
+      payload: JSON.stringify({
+        postId: entry.thread.post,
+        author: entry.author,
+        content: entry.content,
+      }),
+    }
+    await persistNotification(uid, data)
+
+    const fcmPayload = { notification }
+    const { successCount } = await firebaseAdmin
+      .messaging()
+      .sendToDevice(fcmToken, fcmPayload, fcmOptions)
+
+    console.log('Notification successfully sent:', fcmPayload)
+    return sendStatus(200, { success: true, count: successCount })
   } catch (error) {
     return sendStatus(400, { errorMessage: error.message })
   }
-
-  const fcmPayload = {
-    data: {
-      type: NOTIFICATION_TYPES.REPLY,
-      payload: JSON.stringify(entry),
-    },
-  }
-
-  const { successCount } = await firebaseAdmin
-    .messaging()
-    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
-
-  console.log('Notification successfully sent:', fcmPayload)
-
-  return sendStatus(200, { success: true, count: successCount })
 }
 
 // Handle reaction-related notifications for post
@@ -92,26 +119,37 @@ const handlePostReaction = async (entry) => {
     return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
   }
 
-  let fcmToken
   try {
-    fcmToken = await getFcmToken(entry.post.author)
+    const { fcmToken, uid } = await getFcmToken(entry.post.author)
+
+    const badgeCount = await getBadgeCount(uid)
+    const notification = {
+      title: `${entry.author.displayName} reacted to your post`,
+      body: entry.post.content || getPostType(entry.post),
+      tag: `post-${entry.post.id}-reaction`,
+      badge: badgeCount,
+    }
+
+    const data = {
+      type: NOTIFICATION_TYPES.POST_REACTION,
+      payload: JSON.stringify({
+        postId: entry.post.id,
+        author: entry.author,
+        content: entry.post.content,
+      }),
+    }
+    await persistNotification(uid, data)
+
+    const fcmPayload = { notification }
+    const { successCount } = await firebaseAdmin
+      .messaging()
+      .sendToDevice(fcmToken, fcmPayload, fcmOptions)
+
+    console.log('Notification successfully sent:', fcmPayload)
+    return sendStatus(200, { success: true, count: successCount })
   } catch (error) {
     return sendStatus(400, { errorMessage: error.message })
   }
-
-  const fcmPayload = {
-    data: {
-      type: NOTIFICATION_TYPES.POST_REACTION,
-      payload: JSON.stringify(entry),
-    },
-  }
-  const { successCount } = await firebaseAdmin
-    .messaging()
-    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
-
-  console.log('Notification successfully sent:', fcmPayload)
-
-  return sendStatus(200, { success: true, count: successCount })
 }
 
 // Handle reaction-related notifications for comments
@@ -122,26 +160,37 @@ const handleCommentReaction = async (entry) => {
     return sendStatus(400, { errorMessage: 'User should not receive notification on his own action' })
   }
 
-  let fcmToken
   try {
-    fcmToken = await getFcmToken(entry.comment.author)
+    const { fcmToken, uid } = await getFcmToken(entry.comment.author)
+
+    const badgeCount = await getBadgeCount(uid)
+    const notification = {
+      title: `${entry.author.displayName} reacted to your comment`,
+      body: entry.comment.content || 'Audio',
+      tag: `comment-${entry.comment.id}-reaction`,
+      badge: badgeCount,
+    }
+
+    const data = {
+      type: NOTIFICATION_TYPES.COMMENT_REACTION,
+      payload: JSON.stringify({
+        postId: entry.comment.post,
+        author: entry.author,
+        content: entry.comment.content,
+      }),
+    }
+    await persistNotification(uid, data)
+  
+    const fcmPayload = { notification }
+    const { successCount } = await firebaseAdmin
+      .messaging()
+      .sendToDevice(fcmToken, fcmPayload, fcmOptions)
+
+    console.log('Notification successfully sent:', fcmPayload)
+    return sendStatus(200, { success: true, count: successCount })
   } catch (error) {
     return sendStatus(400, { errorMessage: error.message })
   }
-
-  const fcmPayload = {
-    data: {
-      type: NOTIFICATION_TYPES.COMMENT_REACTION,
-      payload: JSON.stringify(entry),
-    },
-  }
-  const { successCount } = await firebaseAdmin
-    .messaging()
-    .sendToDevice(fcmToken, fcmPayload, fcmOptions)
-
-  console.log('Notification successfully sent:', fcmPayload)
-
-  return sendStatus(200, { success: true, count: successCount })
 }
 
 // Handle reaction-related notifications
@@ -163,6 +212,7 @@ const handleComments = async ({ entry }) => {
 // Handler
 module.exports.create = async (event) => {
   const body = JSON.parse(event.body) || {}
+  console.log('Received event', event)
 
   try {
     console.log('Going to validate body:', JSON.stringify(event.body))

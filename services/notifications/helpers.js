@@ -19,6 +19,11 @@ const AllowedModels = {
   REACTIONS: 'reactions',
 }
 
+const AllowedEvents = [
+  'entry.create',
+  'entry.update'
+]
+
 const getPostType = (post) => {
   if (post.repost) {
     return PostTypes.REPOST
@@ -37,7 +42,7 @@ const getPostType = (post) => {
 
 const validateBody = ({ event, model }) => {
   const allowedModels = Object.values(AllowedModels)
-  if (event !== 'entry.create') {
+  if (AllowedEvents.includes(event)) {
     throw new Error(`Bad event type. Expected 'entry.create' but got '${event}' instead`)
   }
   if (!allowedModels.includes(model)) {
@@ -57,11 +62,11 @@ const getFcmToken = async (author) => {
       Authorization: `Bearer ${idToken}`,
     },
   })
-  const { notificationToken } = data
-  if (!notificationToken) {
+  const { notificationToken: fcmToken, uid } = data
+  if (!fcmToken) {
     throw new Error('A fcm token is required to send notifications')
   }
-  return notificationToken
+  return { fcmToken, uid }
 }
 
 const sendStatus = (statusCode, body) => {
@@ -69,10 +74,24 @@ const sendStatus = (statusCode, body) => {
   return ({ statusCode, body: JSON.stringify(body) })
 }
 
+const getBadgeCount = async (uid) => {
+  const notifications = await firebaseAdmin.database().ref(`/notifications/${uid}`).once('value')
+  if (notifications.exists()) {
+    return Object.keys(notifications.val()).length.toString()
+  }
+  return '0'
+}
+
+const persistNotification = async (uid, data) => {
+  return firebaseAdmin.database().ref(`/notifications/${uid}`).push(data)
+}
+
 module.exports = {
   getPostType,
   validateBody,
   getFcmToken,
   sendStatus,
+  getBadgeCount,
+  persistNotification,
   AllowedModels,
 }
