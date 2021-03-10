@@ -19,10 +19,10 @@ const AllowedModels = {
   REACTIONS: 'reactions',
 }
 
-const AllowedEvents = [
-  'entry.create',
-  'entry.update'
-]
+const AllowedEvents = {
+  ENTRY_CREATE: 'entry.create',
+  ENTRY_UPDATE: 'entry.update',
+}
 
 const getPostType = (post) => {
   if (post.repost) {
@@ -42,8 +42,9 @@ const getPostType = (post) => {
 
 const validateBody = ({ event, model }) => {
   const allowedModels = Object.values(AllowedModels)
-  if (AllowedEvents.includes(event)) {
-    throw new Error(`Bad event type. Expected 'entry.create' but got '${event}' instead`)
+  const allowedEvents = Object.values(AllowedEvents)
+  if (!allowedEvents.includes(event)) {
+    throw new Error(`Bad event type. Expected one of ${allowedEvents.join(', ')} but got '${event}' instead`)
   }
   if (!allowedModels.includes(model)) {
     throw new Error(`Bad event model. Expected one of ${allowedModels.join(', ')} but got '${model}' instead`)

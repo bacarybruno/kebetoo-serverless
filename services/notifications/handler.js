@@ -14,6 +14,7 @@ const {
 if (firebaseAdmin.apps.length === 0) {
   firebaseAdmin.initializeApp({
     credential: firebaseAdmin.credential.applicationDefault(),
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
   })
 }
 
@@ -40,25 +41,30 @@ const handlePostComment = async (entry) => {
   try {
     const { fcmToken, uid } = await getFcmToken(entry.post.author)
 
-    const badgeCount = await getBadgeCount(uid)
-    const notification = {
-      title: `${entry.author.displayName} commented your post`,
-      body: entry.content || 'Audio',
-      tag: `post-${entry.post.id}-comment`,
-      badge: badgeCount,
-    }
-
     const data = {
       type: NOTIFICATION_TYPES.COMMENT,
       payload: JSON.stringify({
         postId: entry.post.id,
-        author: entry.author, 
+        author: {
+          displayName: entry.author.displayName,
+          photoURL: entry.author.photoURL,
+          id: entry.author.id,
+          uid: entry.author.uid,
+        },
         content: entry.content,
       }),
     }
     await persistNotification(uid, data)
 
-    const fcmPayload = { notification }
+    const badgeCount = await getBadgeCount(uid)
+    const fcmPayload = {
+      notification: {
+        title: `${entry.author.displayName} commented your post`,
+        body: entry.content || 'Audio',
+        tag: `post-${entry.post.id}-comment`,
+        badge: badgeCount,
+      },
+    }
     const { successCount } = await firebaseAdmin
       .messaging()
       .sendToDevice(fcmToken, fcmPayload, fcmOptions)
@@ -81,25 +87,30 @@ const handleReplyComment = async (entry) => {
   try {
     const { fcmToken, uid } = await getFcmToken(entry.thread.author)
 
-    const badgeCount = await getBadgeCount(uid)
-    const notification = {
-      title: `${entry.author.displayName} replied to your comment`,
-      body: entry.content || 'Audio',
-      tag: `comment-${entry.thread.id}-reply`,
-      badge: badgeCount,
-    }
-
     const data = {
       type: NOTIFICATION_TYPES.REPLY,
       payload: JSON.stringify({
         postId: entry.thread.post,
-        author: entry.author,
+        author: {
+          displayName: entry.author.displayName,
+          photoURL: entry.author.photoURL,
+          id: entry.author.id,
+          uid: entry.author.uid,
+        },
         content: entry.content,
       }),
     }
     await persistNotification(uid, data)
 
-    const fcmPayload = { notification }
+    const badgeCount = await getBadgeCount(uid)
+    const fcmPayload = {
+      notification: {
+        title: `${entry.author.displayName} replied to your comment`,
+        body: entry.content || 'Audio',
+        tag: `comment-${entry.thread.id}-reply`,
+        badge: badgeCount,
+      },
+    }
     const { successCount } = await firebaseAdmin
       .messaging()
       .sendToDevice(fcmToken, fcmPayload, fcmOptions)
@@ -122,25 +133,30 @@ const handlePostReaction = async (entry) => {
   try {
     const { fcmToken, uid } = await getFcmToken(entry.post.author)
 
-    const badgeCount = await getBadgeCount(uid)
-    const notification = {
-      title: `${entry.author.displayName} reacted to your post`,
-      body: entry.post.content || getPostType(entry.post),
-      tag: `post-${entry.post.id}-reaction`,
-      badge: badgeCount,
-    }
-
     const data = {
       type: NOTIFICATION_TYPES.POST_REACTION,
       payload: JSON.stringify({
         postId: entry.post.id,
-        author: entry.author,
+        author: {
+          displayName: entry.author.displayName,
+          photoURL: entry.author.photoURL,
+          id: entry.author.id,
+          uid: entry.author.uid,
+        },
         content: entry.post.content,
       }),
     }
     await persistNotification(uid, data)
 
-    const fcmPayload = { notification }
+    const badgeCount = await getBadgeCount(uid)
+    const fcmPayload = {
+      notification: {
+        title: `${entry.author.displayName} reacted to your post`,
+        body: entry.post.content || getPostType(entry.post),
+        tag: `post-${entry.post.id}-reaction`,
+        badge: badgeCount,
+      },
+    }
     const { successCount } = await firebaseAdmin
       .messaging()
       .sendToDevice(fcmToken, fcmPayload, fcmOptions)
@@ -163,25 +179,30 @@ const handleCommentReaction = async (entry) => {
   try {
     const { fcmToken, uid } = await getFcmToken(entry.comment.author)
 
-    const badgeCount = await getBadgeCount(uid)
-    const notification = {
-      title: `${entry.author.displayName} reacted to your comment`,
-      body: entry.comment.content || 'Audio',
-      tag: `comment-${entry.comment.id}-reaction`,
-      badge: badgeCount,
-    }
-
     const data = {
       type: NOTIFICATION_TYPES.COMMENT_REACTION,
       payload: JSON.stringify({
         postId: entry.comment.post,
-        author: entry.author,
+        author: {
+          displayName: entry.author.displayName,
+          photoURL: entry.author.photoURL,
+          id: entry.author.id,
+          uid: entry.author.uid,
+        },
         content: entry.comment.content,
       }),
     }
     await persistNotification(uid, data)
-  
-    const fcmPayload = { notification }
+
+    const badgeCount = await getBadgeCount(uid)
+    const fcmPayload = {
+      notification: {
+        title: `${entry.author.displayName} reacted to your comment`,
+        body: entry.comment.content || 'Audio',
+        tag: `comment-${entry.comment.id}-reaction`,
+        badge: badgeCount,
+      },
+    }
     const { successCount } = await firebaseAdmin
       .messaging()
       .sendToDevice(fcmToken, fcmPayload, fcmOptions)
