@@ -63,11 +63,11 @@ const getFcmToken = async (author) => {
       Authorization: `Bearer ${idToken}`,
     },
   })
-  const { notificationToken: fcmToken, uid } = data
+  const { notificationToken: fcmToken, id } = data
   if (!fcmToken) {
     throw new Error('A fcm token is required to send notifications')
   }
-  return { fcmToken, uid }
+  return { fcmToken, uid: id }
 }
 
 const sendStatus = (statusCode, body) => {
@@ -83,9 +83,9 @@ const getBadgeCount = async (uid) => {
   return '0'
 }
 
-const persistNotification = async (uid, data) => {
-  return firebaseAdmin.database().ref(`/notifications/${uid}`).push(data)
-}
+const persistNotification = async (uid, data) => (
+  firebaseAdmin.database().ref(`/notifications/${uid}`).push(data)
+)
 
 module.exports = {
   getPostType,
