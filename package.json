@@ -5,6 +5,7 @@
   "scripts": {
     "develop": "sls offline start --printOutput --allowCache",
     "deploy": "sls deploy --env production",
+    "deploy:fn": "sls deploy --env production function -f",
     "sls": "serverless",
     "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1"
