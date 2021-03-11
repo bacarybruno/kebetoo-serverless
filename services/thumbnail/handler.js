@@ -124,6 +124,7 @@ const uploadToS3 = ({
 }
 
 module.exports.generate = async (event, context) => {
+  console.log('Received event', event)
   const srcKey = decodeURIComponent(event.Records[0].s3.object.key).replace(/\+/g, ' ')
   if (processedFiles.includes(srcKey)) {
     return sendStatus(400, `The file ${srcKey} is already processed`)
