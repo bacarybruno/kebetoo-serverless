@@ -30,6 +30,7 @@
     "firebase-admin": "^9.1.1",
     "fluent-ffmpeg": "^2.1.2",
     "mongodb": "^3.6.2",
+    "uuid": "^8.3.2",
     "video-thumbnail-generator": "^1.1.3"
   }
 }

@@ -8,6 +8,7 @@ const {
   persistNotification,
   getBadgeCount,
 } = require('./helpers')
+const { v4: uuidv4 } = require('uuid')
 
 // Check the number of initialized firebase apps
 // to avoid redeclaring the app
@@ -42,17 +43,21 @@ const handlePostComment = async (entry) => {
     const { fcmToken, uid } = await getFcmToken(entry.post.author)
 
     const data = {
-      type: NOTIFICATION_TYPES.COMMENT,
-      payload: JSON.stringify({
-        postId: entry.post.id,
-        author: {
-          displayName: entry.author.displayName,
-          photoURL: entry.author.photoURL,
-          id: entry.author.id,
-          uid: entry.author.uid,
-        },
-        content: entry.content,
-      }),
+      messageId: uuidv4(),
+      sentTime: Date.now(),
+      data: {
+        type: NOTIFICATION_TYPES.COMMENT,
+        payload: JSON.stringify({
+          postId: entry.post.id,
+          author: {
+            displayName: entry.author.displayName,
+            photoURL: entry.author.photoURL,
+            id: entry.author.id,
+            uid: entry.author.uid,
+          },
+          content: entry.content,
+        }),
+      }
     }
     await persistNotification(uid, data)
 
@@ -88,17 +93,21 @@ const handleReplyComment = async (entry) => {
     const { fcmToken, uid } = await getFcmToken(entry.thread.author)
 
     const data = {
-      type: NOTIFICATION_TYPES.REPLY,
-      payload: JSON.stringify({
-        postId: entry.thread.post,
-        author: {
-          displayName: entry.author.displayName,
-          photoURL: entry.author.photoURL,
-          id: entry.author.id,
-          uid: entry.author.uid,
-        },
-        content: entry.content,
-      }),
+      messageId: uuidv4(),
+      sentTime: Date.now(),
+      data: {
+        type: NOTIFICATION_TYPES.REPLY,
+        payload: JSON.stringify({
+          postId: entry.thread.post,
+          author: {
+            displayName: entry.author.displayName,
+            photoURL: entry.author.photoURL,
+            id: entry.author.id,
+            uid: entry.author.uid,
+          },
+          content: entry.content,
+        }),
+      }
     }
     await persistNotification(uid, data)
 
@@ -134,17 +143,21 @@ const handlePostReaction = async (entry) => {
     const { fcmToken, uid } = await getFcmToken(entry.post.author)
 
     const data = {
-      type: NOTIFICATION_TYPES.POST_REACTION,
-      payload: JSON.stringify({
-        postId: entry.post.id,
-        author: {
-          displayName: entry.author.displayName,
-          photoURL: entry.author.photoURL,
-          id: entry.author.id,
-          uid: entry.author.uid,
-        },
-        content: entry.post.content,
-      }),
+      messageId: uuidv4(),
+      sentTime: Date.now(),
+      data: {
+        type: NOTIFICATION_TYPES.POST_REACTION,
+        payload: JSON.stringify({
+          postId: entry.post.id,
+          author: {
+            displayName: entry.author.displayName,
+            photoURL: entry.author.photoURL,
+            id: entry.author.id,
+            uid: entry.author.uid,
+          },
+          content: entry.post.content,
+        }),
+      }
     }
     await persistNotification(uid, data)
 
@@ -180,17 +193,21 @@ const handleCommentReaction = async (entry) => {
     const { fcmToken, uid } = await getFcmToken(entry.comment.author)
 
     const data = {
-      type: NOTIFICATION_TYPES.COMMENT_REACTION,
-      payload: JSON.stringify({
-        postId: entry.comment.post,
-        author: {
-          displayName: entry.author.displayName,
-          photoURL: entry.author.photoURL,
-          id: entry.author.id,
-          uid: entry.author.uid,
-        },
-        content: entry.comment.content,
-      }),
+      messageId: uuidv4(),
+      sentTime: Date.now(),
+      data: {
+        type: NOTIFICATION_TYPES.COMMENT_REACTION,
+        payload: JSON.stringify({
+          postId: entry.comment.post,
+          author: {
+            displayName: entry.author.displayName,
+            photoURL: entry.author.photoURL,
+            id: entry.author.id,
+            uid: entry.author.uid,
+          },
+          content: entry.comment.content,
+        })
+      },
     }
     await persistNotification(uid, data)
 
