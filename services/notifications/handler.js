@@ -1,4 +1,5 @@
 const firebaseAdmin = require('firebase-admin')
+const { v4: uuidv4 } = require('uuid')
 const {
   getFcmToken,
   getPostType,
@@ -8,7 +9,6 @@ const {
   persistNotification,
   getBadgeCount,
 } = require('./helpers')
-const { v4: uuidv4 } = require('uuid')
 
 // Check the number of initialized firebase apps
 // to avoid redeclaring the app
@@ -57,14 +57,14 @@ const handlePostComment = async (entry) => {
           },
           content: entry.content,
         }),
-      }
+      },
     }
     await persistNotification(uid, data)
 
     const badgeCount = await getBadgeCount(uid)
     const fcmPayload = {
       notification: {
-        title: `${entry.author.displayName} commented your post`,
+        title: `${entry.author.displayName} a commenté votre post`,
         body: entry.content || 'Audio',
         tag: `post-${entry.post.id}-comment`,
         badge: badgeCount,
@@ -107,14 +107,14 @@ const handleReplyComment = async (entry) => {
           },
           content: entry.content,
         }),
-      }
+      },
     }
     await persistNotification(uid, data)
 
     const badgeCount = await getBadgeCount(uid)
     const fcmPayload = {
       notification: {
-        title: `${entry.author.displayName} replied to your comment`,
+        title: `${entry.author.displayName} a répondu à votre commentaire`,
         body: entry.content || 'Audio',
         tag: `comment-${entry.thread.id}-reply`,
         badge: badgeCount,
@@ -157,14 +157,14 @@ const handlePostReaction = async (entry) => {
           },
           content: entry.post.content,
         }),
-      }
+      },
     }
     await persistNotification(uid, data)
 
     const badgeCount = await getBadgeCount(uid)
     const fcmPayload = {
       notification: {
-        title: `${entry.author.displayName} reacted to your post`,
+        title: `${entry.author.displayName} a réagi à votre post`,
         body: entry.post.content || getPostType(entry.post),
         tag: `post-${entry.post.id}-reaction`,
         badge: badgeCount,
@@ -206,7 +206,7 @@ const handleCommentReaction = async (entry) => {
             uid: entry.author.uid,
           },
           content: entry.comment.content,
-        })
+        }),
       },
     }
     await persistNotification(uid, data)
@@ -214,7 +214,7 @@ const handleCommentReaction = async (entry) => {
     const badgeCount = await getBadgeCount(uid)
     const fcmPayload = {
       notification: {
-        title: `${entry.author.displayName} reacted to your comment`,
+        title: `${entry.author.displayName} a réagi à votre commentaire`,
         body: entry.comment.content || 'Audio',
         tag: `comment-${entry.comment.id}-reaction`,
         badge: badgeCount,
